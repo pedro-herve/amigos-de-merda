@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFD23F">
+<meta name="description" content="Jogo de roda: a carta aparece no celular de todo mundo. Quem levar mais dedos apontados, leva a carta.">
+<meta property="og:title" content="Amigos de Merda">
+<meta property="og:description" content="Entra na roda: a carta aparece no seu celular.">
+<meta property="og:type" content="website">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFD23F'/%3E%3Crect x='14' y='10' width='36' height='46' rx='6' fill='%23FFFBF0' stroke='%231C1A16' stroke-width='4' transform='rotate(-8 32 32)'/%3E%3Cpath d='M22 30h20M22 38h14' stroke='%23E4572E' stroke-width='5' stroke-linecap='round' transform='rotate(-8 32 32)'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Amigos de Merda</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: uma coluna central, uma carta gigante no meio, sombras deslocadas em tinta preta (cara de baralho impresso) */
+:root{
+  --bg:#FFD23F;
+  --ink:#1C1A16;
+  --paper:#FFFBF0;
+  --hot:#E4572E;
+  --soft:#F7E39A;
+  --muted:#5F5641;
+  --ok:#1F7A4D;
+  --display:"Archivo Black","Arial Black",Impact,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent;
+}
+*{box-sizing:border-box}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--hot);outline-offset:2px}
+
+.app{max-width:520px;margin:0 auto;padding-block:20px 40px;display:flex;flex-direction:column;gap:22px;min-height:100%}
+section{display:flex;flex-direction:column;gap:22px}
+
+/* ---------- Marca ---------- */
+.logo{font-family:var(--display);font-size:clamp(2.6rem,12vw,3.6rem);line-height:.88;letter-spacing:-.02em;text-transform:uppercase;margin:0}
+.logo .de{display:inline-block;background:var(--hot);color:var(--paper);font-size:.42em;padding:.18em .32em .12em;vertical-align:middle;transform:rotate(-6deg);margin:0 .08em;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.tag{font-weight:700;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:10px 0 0}
+
+/* ---------- Blocos ---------- */
+.block{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);padding:18px;display:flex;flex-direction:column;gap:14px}
+.block h2{font-family:var(--display);font-size:1.05rem;letter-spacing:.02em;text-transform:uppercase;margin:0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.block p{margin:0}
+.hint{font-size:.88rem;color:var(--muted);margin:0}
+.err{font-size:.88rem;color:var(--hot);font-weight:700;margin:0}
+
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);font-family:var(--display);width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:1rem}
+.steps b{font-weight:800}
+
+.counter{display:flex;align-items:center;gap:6px;font-family:var(--body);font-size:.95rem;text-transform:none;letter-spacing:0}
+.counter button{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--ink);background:var(--bg);font-weight:800;font-size:1.1rem;line-height:1}
+.counter output{min-width:2ch;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+
+.names{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.names label{display:flex;align-items:center;gap:8px;background:var(--soft);border:2px solid var(--ink);border-radius:10px;padding:0 10px;min-width:0}
+.names span{font-weight:800;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:2ch}
+.names input{border:0;background:transparent;padding:10px 0;width:100%;min-width:0;font-weight:600}
+.names input:focus{outline:none}
+.names label:focus-within{background:var(--paper);box-shadow:0 0 0 3px var(--hot)}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:2.5px solid var(--ink);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:var(--paper);padding:11px 6px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center}
+.seg button + button{border-left:2.5px solid var(--ink)}
+.seg button small{font-weight:500;font-size:.72rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-pressed="true"] small{color:var(--soft)}
+
+details.rules summary{font-family:var(--display);text-transform:uppercase;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.rules summary::-webkit-details-marker{display:none}
+details.rules summary::after{content:"+";font-size:1.4rem;line-height:1}
+details.rules[open] summary::after{content:"–"}
+details.rules dl{margin:14px 0 0;display:flex;flex-direction:column;gap:12px}
+details.rules dt{font-weight:800}
+details.rules dd{margin:2px 0 0;color:var(--muted);font-size:.93rem}
+
+.cta{border:3px solid var(--ink);background:var(--hot);color:var(--paper);font-family:var(--display);font-size:1.3rem;text-transform:uppercase;letter-spacing:.02em;padding:18px;border-radius:14px;box-shadow:5px 5px 0 var(--ink);transition:transform .08s,box-shadow .08s;width:100%}
+.cta:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
+.cta.dark{background:var(--ink);color:var(--bg)}
+.cta.small{font-size:1.05rem;padding:14px}
+.ghost{border:2.5px solid var(--ink);background:transparent;font-weight:700;padding:9px 14px;border-radius:999px;font-size:.88rem}
+.ghost:disabled{opacity:.35;cursor:default}
+.link{border:0;background:none;text-decoration:underline;text-underline-offset:3px;font-weight:600;color:var(--muted);padding:6px;align-self:center}
+
+/* ---------- Início ---------- */
+.choice{display:flex;flex-direction:column;gap:12px}
+.choice .who{font-family:var(--display);text-transform:uppercase;font-size:1.25rem;line-height:1.05}
+.joinrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.codein{border:3px solid var(--ink);border-radius:12px;background:var(--soft);font-family:var(--display);font-size:1.6rem;letter-spacing:.24em;text-transform:uppercase;text-align:center;padding:10px 8px;width:100%;min-width:0}
+.codein::placeholder{color:var(--muted);opacity:.45}
+.codein:focus{outline:none;background:var(--paper);box-shadow:0 0 0 3px var(--hot)}
+.joinrow .cta{width:auto;padding:12px 18px;font-size:1.05rem}
+.or{display:flex;align-items:center;gap:12px;font-weight:800;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.or::before,.or::after{content:"";flex:1;height:3px;background:var(--ink);border-radius:2px;opacity:.85}
+
+/* ---------- Jogo ---------- */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.prog{font-weight:800;font-variant-numeric:tabular-nums;font-size:.95rem}
+.prog small{font-weight:600;color:var(--muted)}
+.bar .actions{display:flex;gap:8px}
+.lead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.92rem;min-height:24px}
+.lead svg{flex:none}
+
+.chip{display:inline-flex;align-items:center;gap:8px;border:2.5px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:6px 12px 6px 10px;font-weight:800;font-size:.85rem}
+.chip b{font-family:var(--display);letter-spacing:.14em;font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.8rem;color:var(--muted)}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--muted);opacity:.6}
+.pill.on{color:var(--ok)}
+.pill.on::before{background:var(--ok);opacity:1;box-shadow:0 0 0 3px rgba(31,122,77,.18)}
+
+.stage{position:relative;padding:6px 6px 10px 0}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--ink);padding:22px 22px 26px;min-height:300px;display:flex;flex-direction:column;justify-content:space-between;gap:18px;transform:rotate(-1.2deg);position:relative;overflow:hidden}
+.card.sacana{background:var(--ink);color:var(--paper)}
+.card.sacana .eyebrow{color:var(--hot)}
+.card.sacana .foot{color:var(--soft)}
+.eyebrow{font-weight:800;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--hot);display:flex;justify-content:space-between}
+.q{font-family:var(--display);font-size:clamp(1.55rem,7.4vw,2.15rem);line-height:1.08;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.foot{font-weight:700;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.card.enter{animation:deal .35s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes deal{from{transform:translate(60px,-20px) rotate(8deg);opacity:0}to{transform:rotate(-1.2deg);opacity:1}}
+
+.countdown{position:absolute;inset:0;display:grid;place-items:center;background:var(--hot);color:var(--paper);font-family:var(--display);font-size:clamp(5rem,30vw,9rem);border-radius:17px;text-transform:uppercase}
+.countdown.word{font-size:clamp(2.6rem,13vw,4rem)}
+.countdown span{animation:pop .5s ease-out}
+@keyframes pop{from{transform:scale(1.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+.reader{display:flex;gap:12px;align-items:center;background:var(--soft);border:2.5px solid var(--ink);border-radius:12px;padding:10px 14px}
+.reader .who{font-family:var(--display);font-size:1.15rem;line-height:1.1;overflow-wrap:anywhere}
+.reader small{display:block;font-size:.78rem;color:var(--muted);font-weight:600}
+.reader svg{flex:none}
+
+.pick h3{font-family:var(--display);text-transform:uppercase;font-size:1.05rem;margin:0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid button{border:2.5px solid var(--ink);background:var(--paper);border-radius:12px;padding:10px 6px;font-weight:800;font-size:.95rem;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.grid button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.grid button .n{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid button .c{font-size:.72rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.grid button.hit{background:var(--hot);color:var(--paper)}
+.grid button.hit .c{color:var(--paper)}
+
+.nav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.nav .num{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-variant-numeric:tabular-nums}
+.nav .num input{width:4.2ch;border:2.5px solid var(--ink);border-radius:10px;background:var(--paper);text-align:center;font-weight:800;padding:8px 2px;font-variant-numeric:tabular-nums}
+.navbtn{border:3px solid var(--ink);background:var(--paper);border-radius:12px;box-shadow:3px 3px 0 var(--ink);font-weight:800;padding:12px 14px}
+.navbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.navbtn:disabled{opacity:.35}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:800;padding:12px 20px;border-radius:999px;box-shadow:4px 4px 0 var(--hot);z-index:30;max-width:calc(100% - 32px);text-align:center}
+
+/* ---------- Placar ---------- */
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rank li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center}
+.rank .pos{font-family:var(--display);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rank .nm{font-weight:700;display:flex;flex-direction:column;gap:4px;min-width:0}
+.rank .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .track{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;border:1.5px solid var(--ink)}
+.rank .fill{height:100%;background:var(--hot)}
+.rank .pts{font-family:var(--display);font-variant-numeric:tabular-nums;min-width:2ch;text-align:right}
+.rank li.top .fill{background:var(--ink)}
+
+.sheet{position:fixed;inset:0;background:rgba(28,26,22,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.sheet .block{width:100%;max-width:520px;max-height:85vh;overflow:auto;border-radius:18px 18px 0 0;border-bottom:0;box-shadow:none;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+.bigcode{font-family:var(--display);font-size:clamp(2.8rem,15vw,4rem);letter-spacing:.18em;text-align:center;background:var(--bg);border:3px solid var(--ink);border-radius:14px;padding:10px 0 6px;margin:0;line-height:1.1}
+.qr{display:grid;place-items:center;background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:14px}
+.qr img,.qr canvas{width:200px;height:200px;image-rendering:pixelated}
+.invite{width:100%;border:2px dashed var(--ink);border-radius:10px;background:var(--soft);padding:10px;font-size:.9rem;resize:none;min-height:5.4em}
+
+/* ---------- Fim ---------- */
+.winner{background:var(--ink);color:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--hot);padding:26px 22px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.winner .k{font-weight:800;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--bg)}
+.winner .w{font-family:var(--display);font-size:clamp(2.2rem,11vw,3.2rem);line-height:.95;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.winner p{margin:0;color:var(--soft)}
+.taken{display:flex;flex-direction:column;gap:6px}
+.taken details{border-top:2px dashed var(--ink);padding-top:8px}
+.taken summary{font-weight:700;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+.taken ul{margin:6px 0 4px;padding-left:18px;color:var(--muted);font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+
+@media (prefers-reduced-motion:reduce){
+  .card.enter,.countdown span{animation:none}
+  .cta,.grid button,.navbtn{transition:none}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= INÍCIO ================= -->
+  <section id="home">
+    <header>
+      <h1 class="logo">Amigos<br><span class="de">de</span>Merda</h1>
+      <p class="tag">Cada um no seu celular · a roda inteira junta</p>
+    </header>
+
+    <div class="block choice">
+      <div class="who">Vai comandar a partida?</div>
+      <p class="hint">Uma pessoa cria a sala. O celular dela marca quem levou cada carta e guarda o placar.</p>
+      <button type="button" class="cta" id="goHost">Criar sala</button>
+    </div>
+
+    <div class="or">ou</div>
+
+    <div class="block choice">
+      <div class="who">Recebeu um código?</div>
+      <p class="hint">Tocou no link do convite? Você já entra direto. Se não, digite o código de 5 caracteres que o anfitrião mostrou.</p>
+      <form class="joinrow" id="joinForm" novalidate>
+        <input class="codein" id="joinCode" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="M7KQ2" aria-label="Código da sala">
+        <button type="submit" class="cta">Entrar</button>
+      </form>
+      <p class="err" id="joinErr" hidden></p>
+    </div>
+
+    <div class="block">
+      <h2>Como jogar</h2>
+      <ol class="steps">
+        <li><div><b>Todos abrem este link no celular.</b> O anfitrião cria a sala e o resto entra com o código.</div></li>
+        <li><div><b>A carta aparece na tela de todo mundo.</b> O leitor da vez lê em voz alta.</div></li>
+        <li><div><b>No “APONTEM!”, cada um aponta para alguém.</b> Ninguém aponta para si mesmo.</div></li>
+        <li><div><b>Quem tiver mais dedos apontados leva a carta.</b> O anfitrião marca, e no fim o campeão vira o Amigo de Merda da noite.</div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= SETUP (anfitrião) ================= -->
+  <section id="setup" hidden>
+    <div class="bar">
+      <button type="button" class="ghost" id="backHome">Voltar</button>
+      <span class="tag" style="margin:0">Criar sala</span>
+    </div>
+
+    <div class="block">
+      <h2>Jogadores
+        <span class="counter">
+          <button type="button" id="minus" aria-label="Remover jogador">−</button>
+          <output id="count">12</output>
+          <button type="button" id="plus" aria-label="Adicionar jogador">+</button>
+        </span>
+      </h2>
+      <p class="hint">Digite na ordem em que vocês estão sentados na roda, no sentido horário. O app usa essa ordem para definir quem lê.</p>
+      <div class="names" id="names"></div>
+    </div>
+
+    <div class="block">
+      <h2>Baralho</h2>
+      <div class="seg" id="modeSeg" role="group" aria-label="Tipo de baralho">
+        <button type="button" data-mode="classico">Clássico<small>zoeira geral</small></button>
+        <button type="button" data-mode="misto">Misto<small>zoeira + pimenta</small></button>
+        <button type="button" data-mode="sacana">Picante<small>só +18</small></button>
+      </div>
+      <h2>Duração</h2>
+      <div class="seg" id="sizeSeg" role="group" aria-label="Número de cartas">
+        <button type="button" data-size="12">Rápida<small>1 volta</small></button>
+        <button type="button" data-size="24">Padrão<small>2 voltas</small></button>
+        <button type="button" data-size="0">Longa<small>todas</small></button>
+      </div>
+      <p class="hint" id="sizeHint"></p>
+    </div>
+
+    <div class="block">
+      <details class="rules">
+        <summary>Regras da casa</summary>
+        <dl>
+          <div><dt>Empate</dt><dd>Os empatados têm 10 segundos cada para se defender. Depois, nova votação só entre eles. Se empatar de novo, o leitor decide.</dd></div>
+          <div><dt>Direito de resposta</dt><dd>Quem levou a carta pode perguntar a uma pessoa por que votou nela. A pessoa tem que responder.</dd></div>
+          <div><dt>Carta ruim</dt><dd>Se a roda achar a carta sem graça, o anfitrião pula. Ela não conta ponto.</dd></div>
+          <div><dt>Prenda (opcional)</dt><dd>Combinem antes: quem chegar a 3 cartas paga uma prenda escolhida pela roda.</dd></div>
+        </dl>
+      </details>
+    </div>
+
+    <button type="button" class="cta" id="start">Criar sala e começar</button>
+  </section>
+
+  <!-- ================= JOGO (anfitrião) ================= -->
+  <section id="play" hidden>
+    <div class="bar">
+      <button type="button" class="chip" id="openInvite" aria-label="Convidar para a sala">Sala <b id="codeChip"></b></button>
+      <div class="actions">
+        <button type="button" class="ghost" id="undo" disabled>Desfazer</button>
+        <button type="button" class="ghost" id="openScore">Placar</button>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="prog" id="prog"></div>
+      <span class="pill" id="hostPill">Sala aberta</span>
+    </div>
+    <div class="lead" id="lead"></div>
+
+    <div class="stage">
+      <article class="card" id="card">
+        <div class="eyebrow"><span id="cardKind"></span><span id="cardNo"></span></div>
+        <p class="q" id="q"></p>
+        <div class="foot"><span>Amigos de Merda</span><span>Aponte no 3</span></div>
+        <div class="countdown" id="cd" hidden></div>
+      </article>
+    </div>
+
+    <div class="reader">
+      <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3l5-4v14l-5-4H4z" fill="#1C1A16"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><small>Lê esta carta em voz alta</small><div class="who" id="readerName"></div></div>
+    </div>
+
+    <div id="phaseRead">
+      <button type="button" class="cta" id="countBtn">Contar 3, 2, 1</button>
+    </div>
+
+    <div id="phasePick" class="block pick" hidden>
+      <h3>Quem levou a carta?</h3>
+      <div class="grid" id="pickGrid"></div>
+      <p class="hint">Empate? 10 segundos de defesa para cada um e nova votação só entre os empatados.</p>
+    </div>
+
+    <button type="button" class="link" id="skip">Pular esta carta</button>
+    <button type="button" class="link" id="finish">Encerrar partida</button>
+  </section>
+
+  <!-- ================= FIM (anfitrião) ================= -->
+  <section id="end" hidden>
+    <div class="winner">
+      <svg width="54" height="40" viewBox="0 0 54 40" aria-hidden="true"><path d="M4 34 L8 8 L19 20 L27 3 L35 20 L46 8 L50 34 Z" fill="#FFD23F" stroke="#FFFBF0" stroke-width="2.5" stroke-linejoin="round"/><rect x="4" y="33" width="46" height="5" rx="1.5" fill="#E4572E"/></svg>
+      <span class="k">Amigo de Merda da noite</span>
+      <h2 class="w" id="winName"></h2>
+      <p id="winSub"></p>
+    </div>
+
+    <div class="block">
+      <h2>Placar final</h2>
+      <ol class="rank" id="finalRank"></ol>
+    </div>
+
+    <div class="block">
+      <h2>As cartas de cada um</h2>
+      <div class="taken" id="takenList"></div>
+    </div>
+
+    <button type="button" class="cta" id="again">Nova partida</button>
+    <button type="button" class="link" id="editPlayers">Editar jogadores</button>
+  </section>
+
+  <!-- ================= CONVIDADO ================= -->
+  <section id="guest" hidden>
+    <div class="bar">
+      <span class="chip">Sala <b id="gCode"></b></span>
+      <button type="button" class="ghost" id="gLeave">Sair</button>
+    </div>
+    <div class="bar">
+      <div class="prog" id="gProg"></div>
+      <span class="pill" id="gPill">Modo manual</span>
+    </div>
+    <div class="lead" id="gLead"></div>
+
+    <div class="stage">
+      <article class="card" id="gCard">
+        <div class="eyebrow"><span id="gKind"></span><span id="gNo"></span></div>
+        <p class="q" id="gQ"></p>
+        <div class="foot"><span>Amigos de Merda</span><span>Aponte no 3</span></div>
+        <div class="countdown" id="gCd" hidden></div>
+      </article>
+    </div>
+
+    <div class="reader" id="gReaderBox" hidden>
+      <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3l5-4v14l-5-4H4z" fill="#1C1A16"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><small>Quem lê agora</small><div class="who" id="gReader"></div></div>
+    </div>
+
+    <div class="nav" id="gNav">
+      <button type="button" class="navbtn" id="gPrev" aria-label="Carta anterior">‹ Ant.</button>
+      <label class="num" for="gJump">Carta <input id="gJump" type="number" inputmode="numeric" min="1"></label>
+      <button type="button" class="navbtn" id="gNext" aria-label="Próxima carta">Próx. ›</button>
+    </div>
+    <p class="hint" id="gHint"></p>
+  </section>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="block" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Placar <button type="button" class="ghost" id="closeScore">Fechar</button></h2>
+    <ol class="rank" id="liveRank"></ol>
+  </div>
+</div>
+
+<div class="sheet" id="inviteSheet" hidden>
+  <div class="block" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+    <h2 id="inviteTitle">Chamar a roda <button type="button" class="ghost" id="closeInvite">Fechar</button></h2>
+    <p class="bigcode" id="inviteCode"></p>
+    <div class="qr" id="qr" hidden></div>
+    <ol class="steps" id="inviteSteps"></ol>
+    <textarea class="invite" id="inviteText" readonly aria-label="Mensagem de convite"></textarea>
+    <button type="button" class="cta small" id="shareInvite" hidden>Mandar no WhatsApp</button>
+    <button type="button" class="cta small dark" id="copyInvite">Copiar convite</button>
+    <p class="hint" id="peersLine"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const CLASSICO = [
+"Quem morreria primeiro num filme de terror por ir ver “que barulho foi esse”?",
+"Quem gastaria o prêmio inteiro da Mega-Sena em menos de um ano?",
+"Quem manda “tô chegando” ainda debaixo do chuveiro?",
+"Quem tem mais chance de ser preso por uma besteira?",
+"Quem fala mal da pessoa assim que ela sai da roda?",
+"Quem viraria coach de Instagram se perdesse o emprego amanhã?",
+"Quem tem o pior dedo para escolher ex?",
+"Quem some do grupo e só reaparece quando precisa de um favor?",
+"Quem chora vendo comercial de margarina?",
+"Quem seria o pior colega de apartamento?",
+"Quem nunca devolve o que pega emprestado?",
+"Quem tem o histórico de pesquisa mais constrangedor?",
+"Quem acredita em qualquer corrente de WhatsApp?",
+"Quem seria eliminado de um reality show na primeira semana?",
+"Quem ganharia um reality show só na base da manipulação?",
+"Quem é o mais mão de vaca na hora de dividir a conta?",
+"Quem pede “só uma batatinha” e come metade da porção?",
+"Quem tem mais chance de cair numa pirâmide financeira?",
+"Quem conta a mesma história pela quinta vez achando que é inédita?",
+"Quem faria o discurso de casamento mais desastroso?",
+"Quem seria o pior motorista de fuga num assalto?",
+"Quem trairia o grupo por um pastel de feira?",
+"Quem tem o celular mais rachado e se recusa a trocar?",
+"Quem manda áudio de quatro minutos para dizer “ok”?",
+"Quem é o primeiro a dormir no meio do rolê?",
+"Quem sai da festa sem se despedir de ninguém?",
+"Quem seria o último a perceber que caiu num golpe?",
+"Quem tem a playlist mais vergonhosa?",
+"Quem stalkeou o ex nesta semana?",
+"Quem finge que leu o livro, mas só viu o resumo?",
+"Quem tem mais chance de virar meme nacional?",
+"Quem chega atrasado até no próprio aniversário?",
+"Quem seria o pior professor do mundo?",
+"Quem largaria tudo para vender artesanato na praia?",
+"Quem fica mais dramático quando pega uma gripe?",
+"Quem venderia a gente por mil seguidores?",
+"Quem guarda mais segredos que ninguém aqui conhece?",
+"Quem é o maior fofoqueiro desta roda?",
+"Quem sempre “esquece” a carteira em casa?",
+"Quem compraria um curso de “como ficar rico” e nunca assistiria?",
+"Quem responde “kkkkk” sem ter achado graça nenhuma?",
+"Quem desistiria de uma trilha nos primeiros dez minutos?",
+"Quem perderia toda a dignidade numa noite de karaokê?",
+"Quem casaria com alguém que conheceu há uma semana?",
+"Quem é o pior perdedor em jogo de tabuleiro?",
+"Quem iria num programa de TV contar a vida inteira?",
+"Quem deixaria uma planta morrer em dois dias?",
+"Quem tem a geladeira mais triste?",
+"Quem viraria influencer de pet sem ter pet?",
+"Quem ficaria rico sem ninguém entender como?",
+"Quem seria o vilão se este grupo fosse uma novela?",
+"Quem tem o pior senso de direção?",
+"Quem já fingiu estar dormindo para não falar com alguém?",
+"Quem esquece o nome das pessoas dois segundos depois de ser apresentado?",
+"Quem demora mais para se arrumar?",
+"Quem esqueceria a gente se ficasse famoso?",
+"Quem seria cancelado primeiro na internet?",
+"Quem usaria a mesma roupa três dias seguidos sem ninguém perceber?",
+"Quem é o amigo da onça oficial do grupo?",
+"Quem tem a risada mais escandalosa?",
+"Quem pede comida por aplicativo todo santo dia?",
+"Quem continua discutindo mesmo depois de perder a discussão?",
+"Quem acha que canta bem, mas não canta?",
+"Quem marca o rolê e é o primeiro a furar?",
+"Quem diz que vai fazer dieta toda segunda-feira?",
+"Quem lê a mensagem e deixa no vácuo por três dias?",
+"Quem ligaria para a mãe para resolver um problema de adulto?",
+"Quem teria a pior ideia num grupo de trabalho da faculdade?",
+"Quem sobreviveria menos tempo sozinho numa ilha deserta?",
+"Quem já mentiu sobre a própria idade?",
+"Quem tem mais chance de entrar numa briga de trânsito?",
+"Quem comeria a comida de outra pessoa da geladeira do trabalho?"
+];
+const SACANA = [
+"Quem manda “acordado?” depois da meia-noite?",
+"Quem tem mais crush não assumido nesta roda?",
+"Quem volta com o ex mais vezes do que deveria?",
+"Quem tem o pior histórico de primeiro encontro?",
+"Quem já esqueceu o nome de alguém que beijou na noite anterior?",
+"Quem tem mais contatinhos salvos com apelido no celular?",
+"Quem seria pego no flagra primeiro?",
+"Quem flerta até com o garçom?",
+"Quem já mandou mensagem quente para o contato errado?",
+"Quem tem o perfil de app de namoro mais mentiroso?",
+"Quem já deu perdido em alguém depois do primeiro encontro?",
+"Quem fica mais carente depois do terceiro copo?",
+"Quem já curtiu sem querer uma foto antiga do crush?",
+"Quem some do mapa quando começa a namorar?",
+"Quem diz “não quero nada sério” e se apega na primeira semana?",
+"Quem já ficou com duas pessoas do mesmo grupo de amigos?",
+"Quem posta indireta no story pensando no ex?",
+"Quem tem o nome mais improvável na lista de ex?",
+"Quem casa primeiro neste grupo?",
+"Quem seria a pior pessoa para apresentar para a família?",
+"Quem conta detalhes demais sobre a vida amorosa?",
+"Quem dá match e nunca puxa assunto?",
+"Quem iria a um encontro às cegas com qualquer pessoa?",
+"Quem já chorou por alguém com quem ficou uma vez só?",
+"Quem tem a cantada mais ruim?",
+"Quem ficaria com alguém desta roda se tivesse coragem?",
+"Quem já stalkeou o novo affair do ex?",
+"Quem manda “oi sumido” para três pessoas na mesma noite?",
+"Quem já transou em lugar público?",
+"Quem é o mais barulhento na cama?",
+"Quem já mandou nude e se arrependeu?",
+"Quem tem o fetiche mais estranho?",
+"Quem já transou dentro do carro?",
+"Quem já se envolveu com alguém do trabalho?",
+"Quem tem a lista de parceiros mais longa desta roda?",
+"Quem já foi pego no meio do sexo?",
+"Quem tem a fantasia sexual mais ousada?",
+"Quem já fingiu um orgasmo?",
+"Quem já transou no primeiro encontro?",
+"Quem toparia um ménage hoje mesmo?",
+"Quem guarda brinquedinhos na gaveta da cabeceira?",
+"Quem já fez sexo por chamada de vídeo?",
+"Quem tem a pegada mais selvagem?",
+"Quem já acordou sem lembrar com quem dormiu?",
+"Quem já transou escondido na casa dos pais?",
+"Quem toparia gravar um vídeo picante?",
+"Quem dura menos na cama?",
+"Quem já teve um caso proibido?",
+"Quem seria o melhor de cama desta roda?",
+"Quem teria coragem de ir a uma casa de swing?",
+"Quem já transou no banheiro de uma festa?",
+"Quem tem mais experiência na cama do que aparenta?",
+"Quem é santinho na rua e capeta entre quatro paredes?",
+"Quem já saiu escondido da casa de alguém de manhã cedo?",
+"Quem já usou algemas ou venda nos olhos?",
+"Quem já fez strip-tease para alguém?",
+"Quem já ficou com alguém só pelo sexo e sumiu depois?",
+"Quem já transou na praia?"
+];
+
+const DEFAULT_N = 12, MIN_N = 3, MAX_N = 20;
+const ALPH = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const MODE_LETTER = {classico:"C", misto:"M", sacana:"P"};
+const LETTER_MODE = {C:"classico", M:"misto", P:"sacana"};
+let S = {
+  screen:"home", n:DEFAULT_N, names:[], mode:"misto", size:24, code:"",
+  deck:[], i:0, reader:0, scores:[], taken:[], history:[], phase:"read", countId:0, done:false
+};
+let G = { code:"", deck:[], i:0, synced:false, reader:"", leader:"", total:0, lastCount:-1, ended:"" };
+const $ = id => document.getElementById(id);
+
+function safeGet(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function safeSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function safeDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function playerName(i){ const v=(S.names[i]||"").trim(); return v || ("Jogador "+(i+1)); }
+
+/* ---------- Código da sala e baralho determinístico ---------- */
+function newCode(mode){ let s=MODE_LETTER[mode]; for(let k=0;k<4;k++) s+=ALPH[Math.floor(Math.random()*ALPH.length)]; return s; }
+function cleanCode(v){ return String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,5); }
+function validCode(c){ return /^[CMP][A-Z0-9]{4}$/.test(c); }
+function hashStr(s){ let h=1779033703^s.length; for(let i=0;i<s.length;i++){ h=Math.imul(h^s.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return h>>>0; }
+function rng(seed){ let a=seed; return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function poolFor(mode){
+  if(mode==="classico") return CLASSICO.map(t=>({t,k:"c"}));
+  if(mode==="sacana") return SACANA.map(t=>({t,k:"s"}));
+  return CLASSICO.map(t=>({t,k:"c"})).concat(SACANA.map(t=>({t,k:"s"})));
+}
+function deckFor(code){
+  const r=rng(hashStr(code)); const a=poolFor(LETTER_MODE[code[0]]).slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function setHash(code){ try{ history.replaceState(null,"",code?("#sala-"+code.toLowerCase()):location.pathname+location.search); }catch(e){ try{ location.hash=code?("sala-"+code.toLowerCase()):""; }catch(_){} } }
+function hashCode(){ const m=/^#?sala-([a-z0-9]{5})$/i.exec(location.hash||""); return m?cleanCode(m[1]):""; }
+
+/* ---------- Sala ao vivo (opcional: acende quando a plataforma conecta) ---------- */
+let roomP=null, live=null, liveUnsubs=[], liveGen=0, heartbeat=null, peerCount=0, liveConnected=false;
+function roomNs(){
+  if(!roomP){
+    roomP = (window.claude && typeof window.claude.use==="function")
+      ? Promise.resolve(window.claude.use("room")).catch(()=>null)
+      : Promise.resolve(null);
+  }
+  return roomP;
+}
+async function leaveLive(){
+  liveGen++; liveUnsubs.forEach(u=>{ try{u();}catch(e){} }); liveUnsubs=[];
+  clearInterval(heartbeat); heartbeat=null;
+  const r=live; live=null; liveConnected=false; peerCount=0; relayPending=null; lastKey="";
+  if(r){ try{ await r.leave(); }catch(e){} }
+}
+async function enterLive(code, role){
+  await leaveLive();
+  const gen=liveGen;
+  if(!(window.claude && typeof window.claude.use==="function")){ enterRelay(code, role, gen); return; }
+  const ns=await roomNs();
+  if(!ns || gen!==liveGen){ renderStatus(); return; }
+  let r;
+  try{ r=await ns.join("sala-"+code.toLowerCase()); }catch(e){ renderStatus(); return; }
+  if(gen!==liveGen){ try{ r.leave(); }catch(e){} return; }
+  live=r;
+  const dead=()=>{ if(live===r){ liveConnected=false; renderStatus(); } };
+  r.presence({role}).catch(()=>{});
+  liveUnsubs.push(r.onPeers(ch=>{
+    peerCount=ch.peers.filter(p=>!p.isMe && p.presence && p.presence.role==="guest").length;
+    if(role==="host" && ch.joined.some(p=>!p.isMe)) broadcast();
+    renderStatus();
+  }, dead));
+  if(typeof r.onConnection==="function") liveUnsubs.push(r.onConnection(c=>{ liveConnected=!!c; if(c && role==="host") broadcast(); renderStatus(); }, dead));
+  else liveConnected=true;
+  if(role==="guest") liveUnsubs.push(r.on("state", msg=>{ if(!msg.sameTab) applyRemote(msg.data); }, dead));
+  if(role==="host"){ broadcast(); heartbeat=setInterval(broadcast, 6000); }
+  renderStatus();
+}
+/* Fora do Claude (site público): sincroniza pelo relay ntfy.sh, sem conta e sem servidor próprio. */
+const RELAY="https://ntfy.sh/";
+let relayOk=true, relayBusy=false, relayPending=null, lastKey="";
+function relayTopic(code){ return "amigosdemerda-"+code.toLowerCase()+"-"+hashStr("adm:"+code).toString(36); }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function relaySend(topic,d){ relayPending={topic,d}; pumpRelay(); return Promise.resolve(); }
+async function pumpRelay(){
+  if(relayBusy||!relayPending) return;
+  relayBusy=true;
+  const job=relayPending; relayPending=null;
+  try{
+    const r=await fetch(RELAY+job.topic,{method:"POST",body:JSON.stringify(job.d)});
+    relayOk=r.ok;
+    if(!r.ok){ relayPending=relayPending||job; await sleep(r.status===429?10000:4000); }
+  }catch(e){ relayOk=false; relayPending=relayPending||job; await sleep(4000); }
+  relayBusy=false; liveConnected=relayOk; renderStatus();
+  if(relayPending && live && live.kind==="relay") pumpRelay();
+}
+function enterRelay(code, role, gen){
+  const topic=relayTopic(code);
+  if(role==="host"){
+    live={kind:"relay", emit:(t,d)=>relaySend(topic,d), leave:async()=>{}};
+    liveConnected=true; lastKey=""; broadcast(); renderStatus(); return;
+  }
+  if(typeof EventSource!=="function"){ renderStatus(); return; }
+  const since=Math.floor(Date.now()/1000)-6*3600;
+  const es=new EventSource(RELAY+topic+"/sse?since="+since);
+  live={kind:"relay", leave:async()=>{ es.close(); }};
+  es.onopen=()=>{ if(gen!==liveGen) return; liveConnected=true; renderStatus(); };
+  es.onerror=()=>{ if(gen!==liveGen) return; liveConnected=false; renderStatus(); };
+  es.onmessage=e=>{
+    if(gen!==liveGen) return;
+    let m, d; try{ m=JSON.parse(e.data); }catch(_){ return; }
+    if(!m || (m.event && m.event!=="message") || typeof m.message!=="string") return;
+    try{ d=JSON.parse(m.message); }catch(_){ return; }
+    liveConnected=true; applyRemote(d, m.time);
+  };
+}
+
+function hostState(){
+  const L=leaders();
+  const lead = L.max ? `${L.who.map(playerName).join(" e ")} · ${L.max} ${L.max===1?"carta":"cartas"}` : "";
+  return { code:S.code, i:S.i, no:absNo(S.i), total:S.deck.length, reader:playerName(S.reader % S.n), phase:S.phase, countId:S.countId, lead,
+           ended: S.screen==="end" ? endLine() : "" };
+}
+function broadcast(){
+  if(!live || S.screen==="home" || S.screen==="setup" || !S.code) return;
+  const st=hostState();
+  if(live.kind==="relay"){
+    const key=[st.no, st.phase==="count"?st.countId:"", st.ended, st.lead, st.reader].join("|");
+    if(key===lastKey) return; lastKey=key;
+  }
+  live.emit("state", st).catch(()=>{});
+}
+function renderStatus(){
+  const hp=$("hostPill");
+  if(live && live.kind==="relay"){ hp.classList.toggle("on",relayOk); hp.textContent = relayOk ? "Sala online" : "Sem internet · fale o número da carta"; }
+  else if(live && liveConnected){ hp.classList.add("on"); hp.textContent = peerCount ? `${peerCount} ${peerCount===1?"celular conectado":"celulares conectados"}` : "Sala aberta · ninguém entrou ainda"; }
+  else { hp.classList.remove("on"); hp.textContent = "Cada um acompanha pelo número"; }
+  $("peersLine").textContent = (live && live.kind==="relay")
+    ? "A carta e a contagem trocam sozinhas no celular de quem entrou. Se a internet de alguém cair, é só falar o número da carta."
+    : (live && liveConnected)
+    ? (peerCount ? `${peerCount} ${peerCount===1?"celular já entrou":"celulares já entraram"} na sala.` : "Ninguém entrou ainda.")
+    : "Se a carta não trocar sozinha no celular de alguém, é só falar o número da carta em voz alta.";
+  const gp=$("gPill");
+  if(G.synced && live && liveConnected){ gp.classList.add("on"); gp.textContent="Sincronizado"; }
+  else { gp.classList.remove("on"); gp.textContent = (live && liveConnected) ? "Esperando o anfitrião" : "Modo manual"; }
+  renderGuestHint();
+}
+
+/* ---------- Início ---------- */
+function go(screen){
+  S.screen=screen;
+  ["home","setup","play","end","guest"].forEach(id=>$(id).hidden = id!==screen);
+  window.scrollTo(0,0);
+}
+$("goHost").onclick=()=>{ go("setup"); renderNames(); renderSetupOpts(); };
+$("backHome").onclick=()=>go("home");
+$("joinCode").addEventListener("input",e=>{ const c=cleanCode(e.target.value); if(c!==e.target.value) e.target.value=c; $("joinErr").hidden=true; });
+$("joinForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const c=cleanCode($("joinCode").value);
+  if(!validCode(c)){ $("joinErr").textContent="Código inválido. São 5 caracteres, começando com C, M ou P."; $("joinErr").hidden=false; return; }
+  joinAsGuest(c);
+});
+
+/* ---------- Setup ---------- */
+function renderNames(){
+  const wrap=$("names"); wrap.innerHTML="";
+  for(let i=0;i<S.n;i++){
+    const l=document.createElement("label");
+    const s=document.createElement("span"); s.textContent=String(i+1).padStart(2,"0");
+    const inp=document.createElement("input");
+    inp.id="p"+i; inp.type="text"; inp.maxLength=18; inp.autocomplete="off";
+    inp.placeholder="Jogador "+(i+1); inp.value=S.names[i]||"";
+    inp.setAttribute("aria-label","Nome do jogador "+(i+1));
+    inp.addEventListener("input",()=>{ S.names[i]=inp.value; safeSet("adm_names",S.names); });
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); const nx=$("p"+(i+1)); if(nx) nx.focus(); else inp.blur(); }});
+    l.append(s,inp); wrap.append(l);
+  }
+  $("count").textContent=S.n;
+  $("minus").disabled=S.n<=MIN_N; $("plus").disabled=S.n>=MAX_N;
+}
+function renderSetupOpts(){
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
+  const pool=poolFor(S.mode).length;
+  const quick=document.querySelector('#sizeSeg [data-size]:nth-child(1)'), std=document.querySelector('#sizeSeg [data-size]:nth-child(2)');
+  if(S.size!==0 && S.size!==S.n && S.size!==S.n*2) S.size=S.n*2;
+  quick.dataset.size=S.n; std.dataset.size=S.n*2;
+  quick.querySelector("small").textContent=Math.min(S.n,pool)+" cartas"; std.querySelector("small").textContent=Math.min(S.n*2,pool)+" cartas";
+  document.querySelector('#sizeSeg [data-size="0"] small').textContent=pool+" cartas";
+  document.querySelectorAll("#sizeSeg button").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.size)===S.size)));
+  const total=S.size===0?pool:Math.min(S.size,pool), per=Math.floor(total/S.n);
+  $("sizeHint").textContent=`${total} cartas · cada pessoa lê ${per>=1?(per===1?"1 vez":per+" vezes"):"no máximo 1 vez"} · cerca de ${Math.max(5,Math.round(total*0.75))} min`;
+}
+$("minus").onclick=()=>{ if(S.n>MIN_N){ const wasStd=S.size===S.n*2, wasQ=S.size===S.n; S.n--; if(wasStd) S.size=S.n*2; if(wasQ) S.size=S.n; renderNames(); renderSetupOpts(); safeSet("adm_n",S.n);} };
+$("plus").onclick=()=>{ if(S.n<MAX_N){ const wasStd=S.size===S.n*2, wasQ=S.size===S.n; S.n++; if(wasStd) S.size=S.n*2; if(wasQ) S.size=S.n; renderNames(); renderSetupOpts(); safeSet("adm_n",S.n); const last=$("p"+(S.n-1)); if(last) last.focus();} };
+document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode; renderSetupOpts();});
+document.querySelectorAll("#sizeSeg button").forEach(b=>b.onclick=()=>{S.size=Number(b.dataset.size); renderSetupOpts();});
+
+function startGame(keepCode){
+  if(!keepCode || !validCode(S.code) || LETTER_MODE[S.code[0]]!==S.mode) S.code=newCode(S.mode);
+  const full=deckFor(S.code);
+  // Nova partida na mesma sala continua de onde o baralho parou, sem repetir cartas.
+  const start = keepCode && S.deckEnd ? S.deckEnd : 0;
+  const size = S.size===0 ? full.length : S.size;
+  let begin = start>=full.length ? 0 : start;
+  S.deckStart=begin; S.deck=full.slice(begin, Math.min(full.length, begin+size)); S.deckEnd=begin+S.deck.length;
+  S.i=0; S.reader=0; S.scores=Array(S.n).fill(0); S.taken=Array.from({length:S.n},()=>[]); S.history=[]; S.phase="read"; S.countId=0;
+  setHash(S.code);
+  go("play"); $("codeChip").textContent=S.code; renderCard(true);
+  saveHost();
+  enterLive(S.code,"host");
+  keepAwake();
+  openInvite();
+}
+$("start").onclick=()=>startGame(false);
+
+/* ---------- Jogo (anfitrião) ---------- */
+const CROWN='<svg width="26" height="20" viewBox="0 0 54 40" aria-hidden="true"><path d="M4 34 L8 8 L19 20 L27 3 L35 20 L46 8 L50 34 Z" fill="#E4572E" stroke="#1C1A16" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+function leaders(){
+  const max=Math.max(0,...(S.scores.length?S.scores:[0]));
+  if(max===0) return {max:0,who:[]};
+  return {max,who:S.scores.map((s,i)=>s===max?i:-1).filter(i=>i>=0)};
+}
+function setLead(el,text){
+  if(!text){ el.textContent="Ninguém levou carta ainda."; return; }
+  el.innerHTML=CROWN; const sp=document.createElement("span"); sp.textContent=text; el.append(sp);
+}
+function renderLead(){
+  const L=leaders();
+  if(!L.max){ setLead($("lead"),""); return; }
+  const names=L.who.map(playerName);
+  const label = names.length===1 ? `${names[0]} está com a coroa` : `${names.slice(0,-1).join(", ")} e ${names.at(-1)} disputam a coroa`;
+  setLead($("lead"), `${label} · ${L.max} ${L.max===1?"carta":"cartas"}`);
+}
+function absNo(i){ return (S.deckStart||0)+i+1; }
+function paintCard(prefix, c, no, animate){
+  const card=$(prefix==="g"?"gCard":"card");
+  card.classList.toggle("sacana",c.k==="s");
+  $(prefix==="g"?"gKind":"cardKind").textContent = c.k==="s" ? "Picante +18" : "Clássico";
+  $(prefix==="g"?"gNo":"cardNo").textContent = "Nº "+String(no).padStart(2,"0");
+  $(prefix==="g"?"gQ":"q").textContent=c.t;
+  if(animate){ card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter"); }
+}
+function renderCard(animate){
+  if(S.i>=S.deck.length){ endGame(); return; }
+  paintCard("h", S.deck[S.i], absNo(S.i), animate);
+  $("prog").innerHTML=""; const p=document.createElement("span"); p.textContent=`Carta ${S.i+1} `; const sm=document.createElement("small"); sm.textContent=`de ${S.deck.length}`; $("prog").append(p,sm);
+  $("readerName").textContent=playerName(S.reader % S.n);
+  $("undo").disabled=S.history.length===0;
+  $("cd").hidden=true;
+  setPhase("read");
+  renderLead();
+}
+function setPhase(ph){
+  S.phase=ph;
+  $("phaseRead").hidden = ph!=="read";
+  $("phasePick").hidden = ph!=="pick";
+  $("skip").hidden = ph==="count";
+  if(ph==="pick") renderPick();
+  broadcast();
+}
+function renderPick(){
+  const g=$("pickGrid"); g.innerHTML="";
+  for(let i=0;i<S.n;i++){
+    const b=document.createElement("button"); b.type="button"; b.id="pick"+i;
+    const n=document.createElement("span"); n.className="n"; n.textContent=playerName(i);
+    const c=document.createElement("span"); c.className="c"; c.textContent=S.scores[i]+(S.scores[i]===1?" carta":" cartas");
+    b.append(n,c); b.onclick=()=>award(i,b); g.append(b);
+  }
+}
+let timers=[];
+function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+function runCountdown(el, done){
+  el.hidden=false;
+  const seq=["3","2","1","Apontem!"], ts=[];
+  seq.forEach((t,k)=>ts.push(setTimeout(()=>{
+    el.classList.toggle("word",t.length>1);
+    el.innerHTML=""; const s=document.createElement("span"); s.textContent=t; el.append(s);
+  },k*750)));
+  ts.push(setTimeout(()=>{ el.hidden=true; done&&done(); }, seq.length*750+600));
+  return ts;
+}
+$("countBtn").onclick=()=>{
+  S.countId++; setPhase("count");
+  timers.push(...runCountdown($("cd"), ()=>{
+    setPhase("pick");
+    $("phasePick").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+  }));
+};
+let locked=false;
+function award(i,btn){
+  if(locked) return; locked=true;
+  btn.classList.add("hit");
+  S.scores[i]++; S.taken[i].push(S.deck[S.i].t);
+  S.history.push({type:"award",player:i,card:S.i,reader:S.reader});
+  toast(`+1 carta para ${playerName(i)}`);
+  timers.push(setTimeout(()=>{ locked=false; S.i++; S.reader++; renderCard(true); saveHost(); window.scrollTo({top:0,behavior:"smooth"}); },650));
+}
+$("skip").onclick=()=>{
+  clearTimers(); locked=false; S.history.push({type:"skip",card:S.i,reader:S.reader});
+  S.i++; renderCard(true); saveHost();
+  toast("Carta pulada. Mesmo leitor.");
+};
+$("undo").onclick=()=>{
+  const h=S.history.pop(); if(!h) return;
+  clearTimers(); locked=false;
+  if(h.type==="award"){ S.scores[h.player]--; S.taken[h.player].pop(); toast(`Ponto de ${playerName(h.player)} desfeito`); }
+  else toast("Carta de volta");
+  S.i=h.card; S.reader=h.reader; renderCard(false); saveHost();
+};
+$("finish").onclick=()=>{ clearTimers(); locked=false; endGame(); };
+
+function saveHost(){
+  if(!S.code) return;
+  safeSet("adm_host",{S:Object.assign({},S,{phase:S.phase==="count"?"read":S.phase}),at:Date.now()});
+}
+
+/* ---------- Convite ---------- */
+function openInvite(){
+  $("inviteCode").textContent=S.code;
+  const url = inviteUrl();
+  $("inviteText").value = url
+    ? `Bora jogar Amigos de Merda! Entra na sala ${S.code} por aqui: ${url}`
+    : `Bora jogar Amigos de Merda! Abre o link do jogo, toca em "Entrar" e digita o código ${S.code}.`;
+  $("inviteSteps").innerHTML = url
+    ? '<li><div><b>Na roda, peça para escanearem o QR</b> com a câmera do celular.</div></li><li><div><b>Ou mande o convite no grupo.</b> Quem tocar no link cai direto na sala.</div></li><li><div><b>Pronto.</b> A carta e a contagem aparecem no celular de todo mundo.</div></li>'
+    : '<li><div><b>Mande o link deste jogo</b> no grupo de vocês.</div></li><li><div><b>Cada um toca em “Entrar”</b> e digita o código acima.</div></li><li><div><b>Pronto.</b> A carta aparece no celular de todo mundo.</div></li>';
+  $("shareInvite").hidden = !(url && navigator.share);
+  const qr=$("qr"); qr.hidden=!url; qr.innerHTML="";
+  if(url) loadQR().then(()=>{ qr.innerHTML=""; new QRCode(qr,{text:url,width:200,height:200,colorDark:"#1C1A16",colorLight:"#FFFBF0",correctLevel:QRCode.CorrectLevel.M}); }).catch(()=>{ qr.hidden=true; });
+  renderStatus();
+  $("inviteSheet").hidden=false; $("closeInvite").focus();
+}
+$("openInvite").onclick=openInvite;
+function inviteUrl(){ return (!window.claude && /^https?:/.test(location.href)) ? location.origin+location.pathname+"#sala-"+S.code.toLowerCase() : ""; }
+let qrLoad=null;
+function loadQR(){
+  if(window.QRCode) return Promise.resolve();
+  if(!qrLoad) qrLoad=new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"; sc.onload=res; sc.onerror=()=>{ qrLoad=null; rej(); }; document.head.append(sc); });
+  return qrLoad;
+}
+$("shareInvite").onclick=()=>{
+  const url=inviteUrl();
+  navigator.share({title:"Amigos de Merda", text:`Bora jogar Amigos de Merda! Sala ${S.code}:`, url}).catch(()=>{});
+};
+$("closeInvite").onclick=()=>{ $("inviteSheet").hidden=true; };
+$("copyInvite").onclick=()=>{
+  const ta=$("inviteText");
+  const fallback=()=>{ ta.focus(); ta.select(); toast("Texto selecionado. Copie e mande no grupo."); };
+  try{
+    navigator.clipboard.writeText(ta.value).then(()=>toast("Convite copiado. Cole no grupo da roda."), fallback);
+  }catch(e){ fallback(); }
+};
+
+/* ---------- Placar ---------- */
+function fillRank(ol){
+  ol.innerHTML="";
+  const order=S.scores.map((s,i)=>({s,i})).sort((a,b)=>b.s-a.s || a.i-b.i);
+  const max=Math.max(1,...S.scores); let pos=0, last=null;
+  order.forEach((o,k)=>{
+    if(o.s!==last){ pos=k+1; last=o.s; }
+    const li=document.createElement("li"); if(o.s===max && o.s>0) li.className="top";
+    const a=document.createElement("span"); a.className="pos"; a.textContent=pos+"º";
+    const b=document.createElement("div"); b.className="nm";
+    const nm=document.createElement("span"); nm.textContent=playerName(o.i);
+    const tr=document.createElement("div"); tr.className="track"; const f=document.createElement("div"); f.className="fill"; f.style.width=(o.s/max*100)+"%"; tr.append(f);
+    b.append(nm,tr);
+    const c=document.createElement("span"); c.className="pts"; c.textContent=o.s;
+    li.append(a,b,c); ol.append(li);
+  });
+}
+$("openScore").onclick=()=>{ fillRank($("liveRank")); $("sheet").hidden=false; $("closeScore").focus(); };
+$("closeScore").onclick=()=>{ $("sheet").hidden=true; };
+["sheet","inviteSheet"].forEach(id=>$(id).addEventListener("click",e=>{ if(e.target.id===id) $(id).hidden=true; }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("sheet").hidden=true; $("inviteSheet").hidden=true; } });
+
+/* ---------- Fim ---------- */
+function endLine(){
+  const L=leaders();
+  if(!L.max) return "Fim de jogo. Ninguém levou carta.";
+  const names=L.who.map(playerName);
+  return `${names.join(" e ")} ${names.length>1?"empataram":"é o Amigo de Merda da noite"}, com ${L.max} ${L.max===1?"carta":"cartas"}.`;
+}
+function endGame(){
+  go("end"); saveHost();
+  const L=leaders();
+  if(!L.max){ $("winName").textContent="Ninguém"; $("winSub").textContent="Nenhuma carta foi marcada. Bando de santos."; }
+  else{
+    const names=L.who.map(playerName);
+    $("winName").textContent = names.join(" e ");
+    $("winSub").textContent = `${names.length>1?"Empate com ":"Levou "}${L.max} ${L.max===1?"carta":"cartas"} de ${S.i} jogadas.${names.length>1?" Desempate: defesa de 10 s e votação da roda.":""}`;
+  }
+  fillRank($("finalRank"));
+  const tl=$("takenList"); tl.innerHTML="";
+  const order=S.scores.map((s,i)=>({s,i})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s);
+  if(!order.length){ const p=document.createElement("p"); p.className="hint"; p.textContent="Nenhuma carta marcada."; tl.append(p); }
+  order.forEach((o,k)=>{
+    const d=document.createElement("details"); if(k===0) d.open=true;
+    const sm=document.createElement("summary"); const a=document.createElement("span"); a.textContent=playerName(o.i); const b=document.createElement("span"); b.textContent=o.s; sm.append(a,b);
+    const ul=document.createElement("ul"); S.taken[o.i].forEach(t=>{ const li=document.createElement("li"); li.textContent=t; ul.append(li); });
+    d.append(sm,ul); tl.append(d);
+  });
+  broadcast();
+}
+$("again").onclick=()=>startGame(true);
+$("editPlayers").onclick=()=>{ go("setup"); renderNames(); renderSetupOpts(); };
+
+/* ---------- Convidado ---------- */
+let gTimers=[];
+function joinAsGuest(code){
+  G={ code, deck:deckFor(code), i:0, synced:false, reader:"", leader:"", total:0, lastCount:-1, ended:"" };
+  setHash(code);
+  go("guest"); $("gCode").textContent=code;
+  renderGuest(true);
+  enterLive(code,"guest");
+  keepAwake();
+}
+function renderGuest(animate){
+  G.i=Math.max(0,Math.min(G.i,G.deck.length-1));
+  paintCard("g", G.deck[G.i], G.i+1, animate);
+  if(G.ended){ $("gKind").textContent="Fim de jogo"; $("gQ").textContent=G.ended; $("gCard").classList.remove("sacana"); }
+  $("gProg").textContent = `Carta Nº ${G.i+1}`;
+  $("gJump").value=G.i+1; $("gJump").max=G.deck.length;
+  $("gPrev").disabled=G.i<=0; $("gNext").disabled=G.i>=G.deck.length-1;
+  $("gReaderBox").hidden=!G.reader; $("gReader").textContent=G.reader;
+  setLead($("gLead"), G.leader ? `Com a coroa: ${G.leader}` : "");
+  if(!G.synced) $("gLead").textContent="";
+  renderGuestHint();
+}
+function renderGuestHint(){
+  $("gHint").textContent = G.synced
+    ? "A carta troca sozinha quando o anfitrião avançar. Você também pode olhar outras pelas setas."
+    : "Acompanhe pelo número que o anfitrião falar. A carta Nº 1 do seu celular é a mesma Nº 1 do dele.";
+}
+function guestGo(i){ G.i=i; renderGuest(true); }
+$("gPrev").onclick=()=>guestGo(G.i-1);
+$("gNext").onclick=()=>guestGo(G.i+1);
+$("gJump").addEventListener("change",e=>{ const v=parseInt(e.target.value,10); if(Number.isFinite(v)) guestGo(v-1); });
+$("gLeave").onclick=()=>{ gTimers.forEach(clearTimeout); leaveLive(); setHash(""); $("joinCode").value=""; go("home"); };
+function applyRemote(d, srvTime){
+  if(!d || typeof d!=="object" || d.code!==G.code) return;
+  const i=Number(d.i); const total=Number(d.total)||0;
+  // O anfitrião envia o índice dentro da partida; a posição no baralho vem do número exibido.
+  const wasSynced=G.synced; G.synced=true;
+  G.reader=typeof d.reader==="string"?d.reader.slice(0,24):"";
+  G.leader=typeof d.lead==="string"?d.lead.slice(0,80):"";
+  G.total=total;
+  G.ended=typeof d.ended==="string"?d.ended.slice(0,160):"";
+  const abs = Number.isInteger(d.no) ? d.no-1 : (Number.isInteger(i)?i:G.i);
+  const moved = abs!==G.i;
+  if(abs>=0 && abs<G.deck.length) G.i=abs;
+  renderGuest(moved || !wasSynced);
+  renderStatus();
+  const fresh = typeof srvTime!=="number" || Math.abs(Date.now()/1000 - srvTime) < 12;
+  if(d.phase==="count" && d.countId!==G.lastCount && fresh){
+    G.lastCount=d.countId; gTimers.forEach(clearTimeout); gTimers=runCountdown($("gCd"));
+  }
+}
+
+/* ---------- Tela sempre acesa durante o jogo ---------- */
+let wakeLock=null;
+async function keepAwake(){
+  try{ if("wakeLock" in navigator && document.visibilityState==="visible" && !wakeLock){ wakeLock=await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release",()=>{ wakeLock=null; }); } }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && (S.screen==="play"||S.screen==="guest"||S.screen==="end")) keepAwake(); });
+
+/* ---------- Utilidades ---------- */
+let toastT;
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,1600); }
+
+/* ---------- Boot ---------- */
+function resumeHost(saved){
+  S=Object.assign(S,saved);
+  $("codeChip").textContent=S.code; setHash(S.code);
+  go(S.screen==="end"?"end":"play");
+  if(S.screen==="end") endGame(); else renderCard(false);
+  enterLive(S.code,"host");
+}
+function start(data){
+  const n=safeGet("adm_n"); if(typeof n==="number" && n>=MIN_N && n<=MAX_N) S.n=n;
+  const nm=safeGet("adm_names"); if(Array.isArray(nm)) S.names=nm;
+  S.size=S.n*2;
+  renderNames(); renderSetupOpts();
+  if(data && data.S && data.S.screen){ const snap=data.S;
+    if(snap.screen==="guest" && data.G && validCode(data.G.code)){ joinAsGuest(data.G.code); G.i=data.G.i||0; renderGuest(false); return; }
+    if((snap.screen==="play"||snap.screen==="end") && validCode(snap.code)){ resumeHost(snap); return; }
+    if(snap.screen==="setup"){ go("setup"); return; }
+  }
+  const hc=hashCode();
+  const saved=safeGet("adm_host");
+  if(hc && saved && saved.S && saved.S.code===hc && (saved.S.screen==="play"||saved.S.screen==="end")){ resumeHost(saved.S); return; }
+  if(hc && validCode(hc)){ joinAsGuest(hc); return; }
+  go("home");
+}
+window.claude?.hot?.snapshot?.(()=>({S:Object.assign({},S,{phase:S.phase==="count"?"read":S.phase}), G:{code:G.code,i:G.i}}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
